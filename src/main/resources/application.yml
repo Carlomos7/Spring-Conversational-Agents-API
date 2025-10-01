@@ -1,0 +1,102 @@
+# Import .env (local dev/CI). Real env vars still override these.
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: conversational-agents
+
+  # ============ default profile (PostgreSQL on localhost) ============
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:agentsdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway owns schema
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # Spring Cloud CircuitBreaker (Resilience4j) toggle lives under spring.cloud
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# Resilience4j instances/config live at the root (not under spring:)
+resilience4j:
+  timelimiter:
+    instances:
+      llm:
+        timeout-duration: 6s
+  retry:
+    instances:
+      llm:
+        max-attempts: 3
+        wait-duration: 300ms
+  circuitbreaker:
+    instances:
+      llm:
+        sliding-window-size: 20
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+
+# LangChain4j OpenAI (matches your POM deps)
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${OPENAI_API_KEY:}
+      model-name: ${OPENAI_MODEL:gpt-4o-mini}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+
+# ========================= compose profile =========================
+# Lets Spring Boot manage docker-compose and point JDBC to service host "db"
+---
+spring:
+  config:
+    activate:
+      on-profile: compose
+  docker:
+    compose:
+      enabled: true
+      file: docker-compose.yml
+      start:
+        command: up
+      stop:
+        command: down
+
+  datasource:
+    url: jdbc:postgresql://db:${POSTGRES_PORT:5432}/${POSTGRES_DB:agentsdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
