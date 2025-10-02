@@ -1,4 +1,4 @@
-package com.carlomos.agents.conversational_agents;
+package com.carlomos.agents;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.util.TestPropertyValues;
