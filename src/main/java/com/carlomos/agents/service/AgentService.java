@@ -19,10 +19,12 @@ public class AgentService {
         this.agentRepository = agentRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<Agent> findAll() {
         return agentRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Agent findById(UUID id) {
         return agentRepository.findById(id).orElse(null);
     }
