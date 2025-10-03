@@ -3,7 +3,9 @@ package com.carlomos.agents.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +41,11 @@ public class ConversationService { // TODO: Add custom exceptions
     public List<Conversation> listByAgent(UUID agentId, Pageable pageable) {
         Agent agent = agentRepository.findById(agentId)
                 .orElseThrow(() -> new IllegalArgumentException("Agent not found"));
-        return conversationRepository.findAgentOrderByCreatedAtDesc(agent, pageable);
+        Pageable withSort = pageable.getSort().isUnsorted()
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt"))
+                : pageable;
+        return conversationRepository.findByAgent(agent, withSort);
     }
 
     public void deleteById(UUID id) {
