@@ -6,7 +6,10 @@ import com.carlomos.agents.dto.request.agent.AgentRequest;
 import com.carlomos.agents.dto.response.agent.AgentResponse;
 import com.carlomos.agents.entity.Agent;
 
-public class AgentMapper {
+public final class AgentMapper {
+
+    private AgentMapper() {
+    }
 
     public static Agent toEntity(AgentRequest dto) {
         return new Agent(
