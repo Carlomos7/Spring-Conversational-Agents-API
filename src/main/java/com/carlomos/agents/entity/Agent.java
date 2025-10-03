@@ -1,6 +1,7 @@
 package com.carlomos.agents.entity;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,9 +12,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -29,21 +32,25 @@ public class Agent {
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private Instant createdAt;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, columnDefinition = "text")
     private String name;
 
-    @Column(name = "context", nullable = false)
+    @Column(name = "context", nullable = false, columnDefinition = "text")
     private String context;
 
-    @Column(name = "first_message", nullable = false)
+    @Column(name = "first_message", nullable = false, columnDefinition = "text")
     private String firstMessage;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "response_shape", nullable = false, columnDefinition = "jsonb")
     private JsonNode responseShape;
 
-    @Column(name = "instructions", nullable = false)
+    @Column(name = "instructions", nullable = false, columnDefinition = "text")
     private String instructions;
+
+    // Bidirectional relationship with Conversation
+    @OneToMany(mappedBy = "agent", fetch = FetchType.LAZY)
+    private List<Conversation> conversations;
 
     protected Agent() {
     }
@@ -89,6 +96,10 @@ public class Agent {
 
     public String getInstructions() {
         return instructions;
+    }
+
+    public List<Conversation> getConversations() {
+        return conversations;
     }
 
     // Setters
