@@ -12,17 +12,19 @@ import com.carlomos.agents.repository.AgentRepository;
 @Service
 @Transactional
 public class AgentService {
-
+// TODO: Add custom exceptions
     private final AgentRepository agentRepository;
 
     public AgentService(AgentRepository agentRepository) {
         this.agentRepository = agentRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<Agent> findAll() {
         return agentRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Agent findById(UUID id) {
         return agentRepository.findById(id).orElse(null);
     }
