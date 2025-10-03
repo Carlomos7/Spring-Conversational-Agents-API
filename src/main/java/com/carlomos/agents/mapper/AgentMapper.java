@@ -13,16 +13,15 @@ public final class AgentMapper {
 
     public static Agent toEntity(AgentRequest dto) {
         return new Agent(
-            dto.name(),
-            dto.context(),
-            dto.firstMessage(),
-            dto.responseShape(),
-            dto.instructions()
-        );
+                dto.name(),
+                dto.context(),
+                dto.firstMessage(),
+                dto.responseShape(),
+                dto.instructions());
     }
 
     // for PUT/PATCH operations
-    public static void copy(AgentRequest dto, Agent target){
+    public static void copy(AgentRequest dto, Agent target) {
         target.setName(dto.name());
         target.setContext(dto.context());
         target.setFirstMessage(dto.firstMessage());
@@ -32,13 +31,13 @@ public final class AgentMapper {
 
     public static AgentResponse toResponse(Agent agent) {
         return new AgentResponse(
-            agent.getId(),
-            agent.getName(),
-            agent.getContext(),
-            agent.getFirstMessage(),
-            agent.getResponseShape(),
-            agent.getInstructions()
-        );
+                agent.getId(),
+                agent.getCreatedAt(),
+                agent.getName(),
+                agent.getContext(),
+                agent.getFirstMessage(),
+                agent.getResponseShape(),
+                agent.getInstructions());
     }
 
     public static List<AgentResponse> toResponseList(List<Agent> agents) {
