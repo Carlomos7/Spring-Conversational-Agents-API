@@ -12,7 +12,7 @@ import com.carlomos.agents.repository.AgentRepository;
 @Service
 @Transactional
 public class AgentService {
-
+// TODO: Add custom exceptions
     private final AgentRepository agentRepository;
 
     public AgentService(AgentRepository agentRepository) {
