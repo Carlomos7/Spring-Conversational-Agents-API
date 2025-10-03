@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: compose
+
+  datasource:
+    url: jdbc:postgresql://db:${POSTGRES_PORT:5432}/${POSTGRES_DB:agentsdb}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
