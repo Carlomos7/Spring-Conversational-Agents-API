@@ -1,8 +1,13 @@
-package com.carlomos.agents.dto.request.agent;
+package com.carlomos.agents.dto.response.agent;
+
+import java.time.Instant;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public record CreateAgentDTO(
+public record AgentResponse(
+                UUID id,
+                Instant createdAt,
                 String name,
                 String context,
                 String firstMessage,
