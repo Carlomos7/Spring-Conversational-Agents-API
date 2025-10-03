@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +17,7 @@ import com.carlomos.agents.repository.MessageRepository;
 @Service
 @Transactional
 public class MessageService {
-// TODO: Add custom exceptions
+    // TODO: Add custom exceptions
     private static final Set<String> ALLOWED_ROLES = Set.of("user", "agent", "system");
 
     private final MessageRepository messageRepository;
@@ -49,7 +51,12 @@ public class MessageService {
         if (conversation == null) {
             throw new IllegalArgumentException("Conversation not found");
         }
-        return messageRepository.findByConversationOrderByCreatedAtAsc(conversationId, pageable);
+        Pageable withSort = pageable.getSort().isUnsorted()
+                ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                        Sort.by(Sort.Direction.DESC, "createdAt"))
+                : pageable;
+
+        return messageRepository.findByConversation(conversation, withSort);
     }
 
     public void deleteById(UUID id) {
