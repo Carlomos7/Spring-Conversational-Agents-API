@@ -13,5 +13,5 @@ import com.carlomos.agents.entity.Conversation;
 @Repository
 public interface ConversationRepository extends JpaRepository<Conversation, UUID> {
 
-    List<Conversation> findAgentOrderByCreatedAtDesc(Agent agent, Pageable pageable);
+    List<Conversation> findByAgent(Agent agent, Pageable pageable);
 }

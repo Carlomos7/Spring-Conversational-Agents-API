@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.carlomos.agents.dto.request.conversation.ConversationRequest;
 import com.carlomos.agents.dto.response.conversation.ConversationResponse;
 import com.carlomos.agents.mapper.ConversationMapper;
 import com.carlomos.agents.service.ConversationService;
@@ -48,8 +49,8 @@ public class ConversationController {
 
     @Operation(summary = "Create a new conversation", description = "Create a new conversation for a specific agent")
     @PostMapping
-    public ResponseEntity<ConversationResponse> create(@RequestBody UUID agentId) {
-        var conversation = conversationService.createForAgent(agentId);
+    public ResponseEntity<ConversationResponse> create(@RequestBody ConversationRequest request) {
+        var conversation = conversationService.createForAgent(request.agentId());
         return ResponseEntity.ok(ConversationMapper.toResponse(conversation));
     }
 
