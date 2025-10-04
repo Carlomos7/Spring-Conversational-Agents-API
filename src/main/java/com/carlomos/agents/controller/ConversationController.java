@@ -3,7 +3,11 @@ package com.carlomos.agents.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +47,7 @@ public class ConversationController {
     @GetMapping
     public List<ConversationResponse> listByAgent(
             @RequestParam UUID agentId,
-            Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20) @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ConversationMapper.toResponseList(conversationService.listByAgent(agentId, pageable));
     }
 
