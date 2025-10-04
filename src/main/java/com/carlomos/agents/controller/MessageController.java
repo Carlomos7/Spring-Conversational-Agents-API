@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
+
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +41,8 @@ public class MessageController {
 
     @Operation(summary = "List messages by conversation", description = "Retrieve a paginated list of messages for a specific conversation")
     @GetMapping("/conversations/{conversationId}")
-    public List<MessageResponse> listByConversation(@PathVariable UUID conversationId, Pageable pageable) {
+    public List<MessageResponse> listByConversation(@PathVariable UUID conversationId,
+            @ParameterObject @PageableDefault(size = 50) @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return MessageMapper.toResponseList(messageService.listByConversation(conversationId, pageable));
     }
 
