@@ -1,11 +1,7 @@
 package com.carlomos.agents.service.llm;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -40,7 +36,10 @@ public class OpenAiChatService {
     private final MessageRepository messages;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public OpenAiChatService(ChatModel chatModel, AgentRepository agents, ConversationRepository conversations,
+    public OpenAiChatService(
+            ChatModel chatModel,
+            AgentRepository agents,
+            ConversationRepository conversations,
             MessageRepository messages) {
         this.chatModel = chatModel;
         this.agents = agents;
@@ -48,82 +47,104 @@ public class OpenAiChatService {
         this.messages = messages;
     }
 
-    // Send a user msg and persist the AI reply; enforcing Agent.response_shape if
-    // present
+    /**
+     * Sends a user message, appends to history, calls OpenAI with optional JSON-Schema
+     * (from Agent.responseShape), persists the AI reply, and returns the saved reply.
+     */
     public Message ask(UUID conversationId, String userContent) {
         Conversation conv = conversations.findById(conversationId)
                 .orElseThrow(() -> new IllegalArgumentException("Conversation not found: " + conversationId));
         Agent agent = conv.getAgent();
 
-        // Build prompt (system + context + optional hint + recent history)
-        List<ChatMessage> prompt = new ArrayList<>();
-        if (notBlank(agent.getInstructions()))
-            prompt.add(new SystemMessage(agent.getInstructions()));
-        if (notBlank(agent.getContext()))
-            prompt.add(new SystemMessage("Context: " + agent.getContext()));
-        if (notBlank(agent.getFirstMessage()))
-            prompt.add(new SystemMessage("First message hint: " + agent.getFirstMessage()));
+        // 1) Build prompt: system→context→firstMessageHint→recent history→current user
+        List<ChatMessage> prompt = new ArrayList<>(8);
 
-        var history = messages.findByConversation(
+        if (notBlank(agent.getInstructions())) {
+            prompt.add(new SystemMessage(agent.getInstructions()));
+        }
+        if (notBlank(agent.getContext())) {
+            prompt.add(new SystemMessage("Context: " + agent.getContext()));
+        }
+        if (notBlank(agent.getFirstMessage())) {
+            prompt.add(new SystemMessage("First message hint: " + agent.getFirstMessage()));
+        }
+
+        var recent = messages.findByConversation(
                 conv, PageRequest.of(0, 30, Sort.by(Sort.Direction.DESC, "createdAt")));
-        // push oldest to newest
-        history.stream()
+
+        // oldest → newest to preserve chronology
+        recent.stream()
                 .sorted(Comparator.comparing(Message::getCreatedAt))
                 .forEach(m -> {
-                    switch (m.getRole()) {
-                        case "user" -> prompt.add(UserMessage.from(m.getContent()));
-                        case "agent" -> prompt.add(AiMessage.from(m.getContent()));
-                        case "system" -> prompt.add(new SystemMessage(m.getContent()));
-                        default -> {
-                            // nothing
-                        }
-                    }
+                    String role = m.getRole();
+                    if ("user".equals(role))        prompt.add(UserMessage.from(m.getContent()));
+                    else if ("agent".equals(role))  prompt.add(AiMessage.from(m.getContent()));
+                    else if ("system".equals(role)) prompt.add(new SystemMessage(m.getContent()));
                 });
-        // persist + add the fresh user msg
+
+        // 2) Persist current user message and add to prompt
         Message userMsg = messages.save(new Message(conv, "user", userContent));
         prompt.add(UserMessage.from(userMsg.getContent()));
 
-        // Build ChatRequest - attach response_format json_schema if present
+        // 3) Build request with JSON-Schema response_format if agent has one
+        OpenAiChatRequestParameters params = buildOpenAiParams(agent);
+
         ChatRequest chatRequest = ChatRequest.builder()
                 .messages(prompt)
-                .parameters(buildOpenAiParams(agent))
+                .parameters(params)
                 .build();
-        
+
+        // 4) Call model
         ChatResponse chatResponse = chatModel.chat(chatRequest);
 
-        String aiText = chatResponse.aiMessage().text(); // text() is JSON if schema was enforced
+        // If you enforce schema, aiMessage().text() is JSON matching your schema
+        String aiText = chatResponse.aiMessage().text();
 
+        // 5) Persist reply
         return messages.save(new Message(conv, "agent", aiText));
     }
 
-    private static boolean notBlank(String str) {
-        return str != null && !str.trim().isEmpty();
+    // ---- helpers -------------------------------------------------------------
+
+    private static boolean notBlank(String s) {
+        return s != null && !s.trim().isEmpty();
     }
 
     private static String safeSchemaName(String name) {
-        if (name == null || name.isBlank())
-            return "AgentResponse";
-        return name.replaceAll("[^A-Za-z0-9_\\-]", "_");
+        return (name == null || name.isBlank())
+                ? "AgentResponse"
+                : name.replaceAll("[^A-Za-z0-9_\\-]", "_");
     }
 
-    private Map<String, Object> buildResponseFormatCustomParam(Agent agent) {
-        JsonNode schemaNode = agent.getResponseShape(); // JSON Schema stored in DB
-        Map<String, Object> jsonSchema = new HashMap<>();
-        jsonSchema.put("name", safeSchemaName(agent.getName())); // any safe identifier
-        jsonSchema.put("schema", mapper.convertValue(schemaNode, Map.class));
-        jsonSchema.put("strict", true); // enforce schema strictly
-
-        return Map.of(
-                "response_format", Map.of(
-                        "type", "json_schema",
-                        "json_schema", jsonSchema));
-    }
-
+    /**
+     * Creates OpenAI custom parameters for response_format=json_schema
+     * using the schema stored in Agent.responseShape (must be a valid JSON object).
+     *
+     * If no schema is present, returns empty/default parameters.
+     */
     private OpenAiChatRequestParameters buildOpenAiParams(Agent agent) {
-        if (agent.getResponseShape() == null) {
+        JsonNode schemaNode = agent.getResponseShape();
+        if (schemaNode == null || schemaNode.isNull()) {
             return OpenAiChatRequestParameters.builder().build();
         }
-        Map<String, Object> custom = buildResponseFormatCustomParam(agent);
+        if (!schemaNode.isObject()) {
+            // hard fail early to avoid 400s from OpenAI
+            throw new IllegalArgumentException("Agent.responseShape must be a JSON object (valid JSON Schema)");
+        }
+
+        // Per OpenAI structured outputs: wrap in { response_format: { type: "json_schema", json_schema: {...} } }
+        Map<String, Object> jsonSchema = new HashMap<>();
+        jsonSchema.put("name", safeSchemaName(agent.getName())); // arbitrary identifier
+        jsonSchema.put("strict", true);
+        jsonSchema.put("schema", mapper.convertValue(schemaNode, Map.class)); // deep map view of the schema
+
+        Map<String, Object> custom = Map.of(
+            "response_format", Map.of(
+                "type", "json_schema",
+                "json_schema", jsonSchema
+            )
+        );
+
         return OpenAiChatRequestParameters.builder()
                 .customParameters(custom)
                 .build();
