@@ -72,7 +72,7 @@ public class OpenAiChatService {
         var recent = messages.findByConversation(
                 conv, PageRequest.of(0, 30, Sort.by(Sort.Direction.DESC, "createdAt")));
 
-        // oldest → newest to preserve chronology
+        // Add recent messages in chronological order
         recent.stream()
                 .sorted(Comparator.comparing(Message::getCreatedAt))
                 .forEach(m -> {
@@ -94,13 +94,13 @@ public class OpenAiChatService {
                 .parameters(params)
                 .build();
 
-        // 4) Call model
+        // Call model
         ChatResponse chatResponse = chatModel.chat(chatRequest);
 
-        // If you enforce schema, aiMessage().text() is JSON matching your schema
+        // Extract text (should always be present)
         String aiText = chatResponse.aiMessage().text();
 
-        // 5) Persist reply
+        // Persist reply
         return messages.save(new Message(conv, "agent", aiText));
     }
 
