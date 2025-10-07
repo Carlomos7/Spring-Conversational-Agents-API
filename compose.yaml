@@ -1,29 +1,8 @@
 name: conversational-agents
 
 services:
-  app:
-    # profiles: ["app"]
-    build:
-      context: .
-    container_name: conversational-agents-app
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: compose
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      SERVER_PORT: ${SERVER_PORT:-8080}
-    networks: [appnet]
-
+  # --- Postgres
   db:
-    # profiles: ["infra"]
     image: pgvector/pgvector:pg16
     container_name: agents-db
     restart: unless-stopped
@@ -43,12 +22,11 @@ services:
       - db_data:/var/lib/postgresql/data
     networks: [appnet]
 
+  # --- pgAdmin
   pgadmin:
-    # profiles: ["infra"]
     image: dpage/pgadmin4:8
     container_name: agents-pgadmin
     restart: unless-stopped
-    profiles: ["tools"]   # optional
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
@@ -59,6 +37,62 @@ services:
         condition: service_healthy
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks: [appnet]
+
+  # --- App: DEFAULT local dev
+  app:
+    image: eclipse-temurin:21-jdk
+    container_name: conversational-agents-local
+    working_dir: /workspace
+    entrypoint: []  # ensure no jar ENTRYPOINT is inherited
+    command: ["./mvnw","spring-boot:run","-Dspring-boot.run.profiles=compose"]
+    volumes:
+      - ./:/workspace
+      - ~/.m2:/root/.m2
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: compose
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [appnet]
+
+  # --- App image: DEV PROFILE
+  app-image:
+    profiles: ["dev"]
+    build:
+      context: .
+    container_name: conversational-agents-app
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: compose
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks: [appnet]
 
 volumes:
