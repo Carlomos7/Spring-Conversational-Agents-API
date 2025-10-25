@@ -14,8 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.carlomos.agents.dto.request.message.MessageRequest;
-import com.carlomos.agents.dto.response.message.MessageResponse;
+import com.carlomos.agents.dto.request.MessageRequest;
+import com.carlomos.agents.dto.response.MessageResponse;
 import com.carlomos.agents.mapper.MessageMapper;
 import com.carlomos.agents.service.MessageService;
 

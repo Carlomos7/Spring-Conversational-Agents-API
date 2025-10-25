@@ -2,8 +2,8 @@ package com.carlomos.agents.mapper;
 
 import java.util.List;
 
-import com.carlomos.agents.dto.request.agent.AgentRequest;
-import com.carlomos.agents.dto.response.agent.AgentResponse;
+import com.carlomos.agents.dto.request.AgentRequest;
+import com.carlomos.agents.dto.response.AgentResponse;
 import com.carlomos.agents.entity.Agent;
 
 public final class AgentMapper {

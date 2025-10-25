@@ -1,4 +1,4 @@
-package com.carlomos.agents.dto.request.agent;
+package com.carlomos.agents.dto.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

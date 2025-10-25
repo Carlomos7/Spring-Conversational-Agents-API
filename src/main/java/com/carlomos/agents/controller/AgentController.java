@@ -3,8 +3,8 @@ package com.carlomos.agents.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.carlomos.agents.dto.request.agent.AgentRequest;
-import com.carlomos.agents.dto.response.agent.AgentResponse;
+import com.carlomos.agents.dto.request.AgentRequest;
+import com.carlomos.agents.dto.response.AgentResponse;
 import com.carlomos.agents.entity.Agent;
 import com.carlomos.agents.mapper.AgentMapper;
 import com.carlomos.agents.service.AgentService;

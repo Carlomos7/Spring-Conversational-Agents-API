@@ -1,4 +1,4 @@
-package com.carlomos.agents.dto.response.conversation;
+package com.carlomos.agents.dto.response;
 
 import java.time.Instant;
 import java.util.UUID;
