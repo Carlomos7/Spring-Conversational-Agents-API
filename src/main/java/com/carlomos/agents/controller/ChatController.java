@@ -1,6 +1,6 @@
 package com.carlomos.agents.controller;
 
-import com.carlomos.agents.dto.response.message.MessageResponse;
+import com.carlomos.agents.dto.response.MessageResponse;
 import com.carlomos.agents.mapper.MessageMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;

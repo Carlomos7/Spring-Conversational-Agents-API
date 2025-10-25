@@ -2,7 +2,7 @@ package com.carlomos.agents.mapper;
 
 import java.util.List;
 
-import com.carlomos.agents.dto.response.message.MessageResponse;
+import com.carlomos.agents.dto.response.MessageResponse;
 import com.carlomos.agents.entity.Message;
 
 public final class MessageMapper {

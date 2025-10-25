@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.carlomos.agents.dto.request.conversation.ConversationRequest;
-import com.carlomos.agents.dto.response.conversation.ConversationResponse;
+import com.carlomos.agents.dto.request.ConversationRequest;
+import com.carlomos.agents.dto.response.ConversationResponse;
 import com.carlomos.agents.mapper.ConversationMapper;
 import com.carlomos.agents.service.ConversationService;
 
