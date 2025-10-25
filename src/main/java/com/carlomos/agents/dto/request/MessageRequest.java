@@ -1,4 +1,4 @@
-package com.carlomos.agents.dto.request.message;
+package com.carlomos.agents.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

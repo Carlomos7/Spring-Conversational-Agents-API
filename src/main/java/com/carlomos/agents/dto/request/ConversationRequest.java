@@ -1,4 +1,4 @@
-package com.carlomos.agents.dto.request.conversation;
+package com.carlomos.agents.dto.request;
 
 import java.util.UUID;
 
