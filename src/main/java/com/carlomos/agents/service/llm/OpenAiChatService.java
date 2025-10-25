@@ -135,7 +135,7 @@ public class OpenAiChatService {
         // Per OpenAI structured outputs: wrap in { response_format: { type: "json_schema", json_schema: {...} } }
         Map<String, Object> jsonSchema = new HashMap<>();
         jsonSchema.put("name", safeSchemaName(agent.getName())); // arbitrary identifier
-        jsonSchema.put("strict", true);
+        // jsonSchema.put("strict", true); // TODO: make configurable?
         jsonSchema.put("schema", mapper.convertValue(schemaNode, Map.class)); // deep map view of the schema
 
         Map<String, Object> custom = Map.of(

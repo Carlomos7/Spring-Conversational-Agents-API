@@ -28,13 +28,21 @@ management:
       probes:
         enabled: true
 
-# LangChain4j (no secrets here)
+# LangChain4j
 langchain4j:
   open-ai:
+    provider: ${OPENAI_PROVIDER:openai}
     chat-model:
-      base-url: ${OPENAI_BASE_URL}
+      # Mandatory parameters
       api-key: ${OPENAI_API_KEY}
       model-name: ${OPENAI_MODEL}
+
+      # Optional parameters
+      base-url: ${OPENAI_BASE_URL}
+      strict-tools: ${OPENAI_STRICT_TOOLS:true}
+      temperature: ${OPENAI_TEMPERATURE:0.2}
+      log-requests: ${OPENAI_LOG_REQUESTS:false}
+      log-responses: ${OPENAI_LOG_RESPONSES:false}
 
 logging:
   level:
